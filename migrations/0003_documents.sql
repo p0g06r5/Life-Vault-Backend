@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS user_documents (user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,kind TEXT NOT NULL CHECK(kind IN ('space','collections','professional')),body TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT (datetime('now')),PRIMARY KEY(user_id,kind));
