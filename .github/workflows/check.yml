@@ -13,3 +13,34 @@ jobs:
       - run: npm install
       - run: npm run typecheck
       - run: npm test
+      - name: Launch local D1-backed Worker
+        run: |
+          npx wrangler dev --local --port 8787 > /tmp/lifevault-worker.log 2>&1 &
+          echo $! > /tmp/lifevault-worker.pid
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8787/health | jq -e '.database == "ready"' > /dev/null; then
+              echo 'Local D1 initialization succeeded'
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/lifevault-worker.log
+          exit 1
+      - name: Exercise registration login session and logout
+        shell: bash
+        run: |
+          set -euo pipefail
+          API=http://127.0.0.1:8787/api/v1/auth
+          ORIGIN=https://life-vault-c3b.pages.dev
+          EMAIL="ci-$(date +%s)-$$@example.test"
+          PASSWORD='TestPassword!2026'
+          RESPONSE=$(curl -fsS -D /tmp/lv-register-headers -X POST "$API/register" -H "Origin: $ORIGIN" -H 'Content-Type: application/json' -d "{\"name\":\"Test User\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+          echo "$RESPONSE" | jq -e '.user.name=="Test User"'
+          COOKIE=$(grep -i '^set-cookie:' /tmp/lv-register-headers | head -1 | tr -d '\r' | cut -d ' ' -f2 | cut -d ';' -f1)
+          test -n "$COOKIE"
+          curl -fsS "$API/me" -H "Cookie: $COOKIE" | jq -e '.user.email=="'"$EMAIL"'"'
+          curl -fsS -X POST "$API/logout" -H "Origin: $ORIGIN" -H 'Content-Type: application/json' -H "Cookie: $COOKIE" -d '{}' | jq -e '.ok==true'
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' "$API/me" -H "Cookie: $COOKIE")
+          test "$CODE" = "401"
+          curl -fsS -D /tmp/lv-login-headers -X POST "$API/login" -H "Origin: $ORIGIN" -H 'Content-Type: application/json' -d "{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}" | jq -e '.user.email=="'"$EMAIL"'"'
+          echo 'Local auth lifecycle verified'
