@@ -3,11 +3,12 @@ import {cors} from 'hono/cors';
 import {secureHeaders} from 'hono/secure-headers';
 import {currentUser,register,login,logout,me,type Bindings} from './auth';
 import {ensureSchema} from './bootstrap';
+import {listDocuments,putDocument} from './documents';
 const app=new Hono<{Bindings:Bindings}>();
 app.use('*',secureHeaders());
 app.use('/api/v1/*',async(c,next)=>{
  const allowed=[c.env.APP_ORIGIN||'https://life-vault-c3b.pages.dev','http://localhost:5173'];
- return cors({origin:(origin)=>allowed.includes(origin)?origin:undefined,allowMethods:['GET','POST','PATCH','DELETE','OPTIONS'],allowHeaders:['Content-Type'],credentials:true,maxAge:600})(c,next);
+ return cors({origin:(origin)=>allowed.includes(origin)?origin:undefined,allowMethods:['GET','POST','PUT','PATCH','DELETE','OPTIONS'],allowHeaders:['Content-Type'],credentials:true,maxAge:600})(c,next);
 });
 app.use('/api/v1/*',async(c,next)=>{
  if(!['GET','HEAD','OPTIONS'].includes(c.req.method)){
@@ -29,6 +30,8 @@ app.post('/api/v1/auth/login',c=>login(c));
 app.post('/api/v1/auth/logout',c=>logout(c));
 app.get('/api/v1/auth/me',c=>me(c));
 app.get('/api/v1/me',c=>me(c));
+app.get('/api/v1/documents',c=>listDocuments(c));
+app.put('/api/v1/documents/:kind',c=>putDocument(c));
 app.all('/api/v1/collections',async c=>{if(!await currentUser(c))return c.json({error:'Sign in to continue.'},401);return c.json({error:'Collections cloud sync is not available yet. Data still lives in this browser.'},501)});
 app.all('/api/v1/collections/*',async c=>{if(!await currentUser(c))return c.json({error:'Sign in to continue.'},401);return c.json({error:'Collections cloud sync is not available yet.'},501)});
 app.notFound(c=>c.json({error:'Not found'},404));
