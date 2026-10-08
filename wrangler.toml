@@ -1,0 +1,19 @@
+name = "lifevault-api"
+main = "src/index.ts"
+compatibility_date = "2026-10-01"
+
+# Before enabling database routes, create a D1 database via:
+# npx wrangler d1 create lifevault-db
+# Then uncomment and fill in the binding below.
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "lifevault-db"
+# database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+
+# Optional media storage (requires separate creation and configuration):
+# [[r2_buckets]]
+# binding = "MEDIA"
+# bucket_name = "lifevault-media"
+
+[vars]
+APP_ORIGIN = "https://life-vault-c3b.pages.dev"
