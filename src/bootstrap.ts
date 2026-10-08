@@ -20,10 +20,11 @@ const statements=[
 "CREATE INDEX IF NOT EXISTS idx_auth_sessions_user ON auth_sessions(user_id)",
 "CREATE INDEX IF NOT EXISTS idx_auth_sessions_expiration ON auth_sessions(expires_at)",
 "CREATE TABLE IF NOT EXISTS auth_attempts (key TEXT PRIMARY KEY,attempts INTEGER NOT NULL DEFAULT 0,window_start INTEGER NOT NULL)",
-"CREATE TABLE IF NOT EXISTS user_documents (user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,kind TEXT NOT NULL CHECK(kind IN ('space','collections','professional')),body TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT (datetime('now')),PRIMARY KEY(user_id,kind))"
+"CREATE TABLE IF NOT EXISTS user_documents (user_id TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,kind TEXT NOT NULL CHECK(kind IN ('space','collections','professional')),body TEXT NOT NULL,version INTEGER NOT NULL DEFAULT 1,updated_at TEXT NOT NULL DEFAULT (datetime('now')),PRIMARY KEY(user_id,kind))",
+"CREATE TABLE IF NOT EXISTS user_avatars (user_id TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,image_data TEXT NOT NULL,updated_at TEXT NOT NULL DEFAULT (datetime('now')))"
 ];
 let ready:Promise<void>|undefined;
 export function ensureSchema(db:D1Database):Promise<void>{
- if(!ready){ready=(async()=>{const exists=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='auth_credentials'").first();if(exists){const documents=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_documents'").first();if(documents)return;await db.prepare(statements[statements.length-1]).run();return;}for(const sql of statements)await db.prepare(sql).run()})().catch(error=>{ready=undefined;throw error})}
+ if(!ready){ready=(async()=>{const exists=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='auth_credentials'").first();if(exists){const documents=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_documents'").first();if(!documents)await db.prepare(statements[statements.length-2]).run();const avatars=await db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='user_avatars'").first();if(!avatars)await db.prepare(statements[statements.length-1]).run();return;}for(const sql of statements)await db.prepare(sql).run()})().catch(error=>{ready=undefined;throw error})}
  return ready;
 }
