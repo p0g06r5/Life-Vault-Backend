@@ -1,14 +1,13 @@
-name = "lifevault-api"
+name = "life-vault-backend"
 main = "src/index.ts"
 compatibility_date = "2026-10-01"
 
-# Before enabling database routes, create a D1 database via:
-# npx wrangler d1 create lifevault-db
-# Then uncomment and fill in the binding below.
-# [[d1_databases]]
-# binding = "DB"
-# database_name = "lifevault-db"
-# database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+# Cloudflare D1 database linked to this Worker.
+# The ID is a resource identifier, not a secret.
+[[d1_databases]]
+binding = "DB"
+database_name = "lifevault-db"
+database_id = "feb621fc-0c24-4c31-b52e-ce357ef31b40"
 
 # Optional media storage (requires separate creation and configuration):
 # [[r2_buckets]]
