@@ -9,7 +9,7 @@ const encoder=new TextEncoder();
 export const nameSchema=z.string().trim().transform(x=>x.normalize('NFC').replace(/ +/g,' ')).pipe(z.string().min(2).max(60).regex(/^[\p{L}][\p{L}\p{M}]*(?:[ '\u2019.-][\p{L}][\p{L}\p{M}]*)*$/u,'Use letters and normal name separators only.'));
 const passwordSchema=z.string().min(12,'Use at least 12 characters.').max(128).refine(x=>/\p{L}/u.test(x)&&/\p{N}/u.test(x),'Include both letters and numbers.').refine(x=>!/[\u0000-\u001f\u007f]/.test(x),'Control characters are not allowed.');
 const emailSchema=z.string().trim().email().max(254).transform(x=>x.toLowerCase());
-const avatarSchema=z.string().max(45000).regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/).refine(x=>x.length>=160,'Upload a real image.');
+const avatarSchema=z.string().max(45000).regex(/^data:image\/(?:jpeg|png|webp);base64,[A-Za-z0-9+/]+={0,2}$/).refine(x=>x.length>=100,'Upload a real image.').refine(x=>{try{const b=x.split(',')[1];return x.startsWith('data:image/jpeg;')?b.startsWith('/9j/'):x.startsWith('data:image/png;')?b.startsWith('iVBORw0KGgo'):b.startsWith('UklGR')}catch{return false}},'Choose a valid JPEG, PNG or WebP image.');
 const registerSchema=z.object({name:nameSchema,email:emailSchema,password:passwordSchema,avatar:avatarSchema}).strict();
 const loginSchema=z.object({email:emailSchema,password:z.string().min(1).max(128)}).strict();
 function hex(bytes:Uint8Array){return Array.from(bytes,b=>b.toString(16).padStart(2,'0')).join('')}
