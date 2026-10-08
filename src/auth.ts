@@ -15,7 +15,7 @@ async function hashPassword(password:string,salt:string,iterations:number){const
 function equal(a:string,b:string){let diff=a.length^b.length;for(let i=0;i<Math.max(a.length,b.length);i++)diff|=(a.charCodeAt(i)||0)^(b.charCodeAt(i)||0);return diff===0}
 const COOKIE='lifevault_session';
 function cookie(value:string,age=SESSION_SECONDS){return COOKIE+'='+value+'; Path=/api/v1; HttpOnly; Secure; SameSite=Lax; Max-Age='+age}
-function getCookie(header:string|null){for(const chunk of (header||'').split(';')){const [key,...rest]=chunk.trim().split('=');if(key===COOKIE)return rest.join('=')}return null}
+function getCookie(header:string|null|undefined){for(const chunk of (header||'').split(';')){const [key,...rest]=chunk.trim().split('=');if(key===COOKIE)return rest.join('=')}return null}
 async function readBody(c:Ctx):Promise<unknown|null>{if(Number(c.req.header('content-length')||0)>4000)return null;try{const raw=await c.req.text();return raw.length<=4000?JSON.parse(raw):null}catch{return null}}
 async function throttled(c:Ctx,action:string,max:number){const ip=c.req.header('CF-Connecting-IP')||'unknown',key=await sha256(action+':'+ip),now=Math.floor(Date.now()/1000),windowStart=now-900;await c.env.DB.prepare('INSERT INTO auth_attempts(key,attempts,window_start) VALUES(?,1,?) ON CONFLICT(key) DO UPDATE SET attempts=CASE WHEN window_start<? THEN 1 ELSE attempts+1 END,window_start=CASE WHEN window_start<? THEN excluded.window_start ELSE window_start END').bind(key,now,windowStart,windowStart).run();const row=await c.env.DB.prepare('SELECT attempts FROM auth_attempts WHERE key=?').bind(key).first<{attempts:number}>();return (row?.attempts||0)>max}
 export type User={id:string;email:string;display_name:string};
