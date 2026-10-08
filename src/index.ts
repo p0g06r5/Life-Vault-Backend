@@ -2,6 +2,7 @@ import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 import {secureHeaders} from 'hono/secure-headers';
 import {currentUser,register,login,logout,me,type Bindings} from './auth';
+import {ensureSchema} from './bootstrap';
 const app=new Hono<{Bindings:Bindings}>();
 app.use('*',secureHeaders());
 app.use('/api/v1/*',async(c,next)=>{
@@ -16,9 +17,10 @@ app.use('/api/v1/*',async(c,next)=>{
  }
  await next();
 });
+app.use('/api/v1/*',async(c,next)=>{if(!c.env.DB)return c.json({error:'Database binding is missing.'},503);await ensureSchema(c.env.DB);await next()});
 app.get('/health',async c=>{
  let database:'ready'|'migration-required'|'unavailable'='unavailable';
- if(c.env.DB){try{await c.env.DB.prepare('SELECT id FROM users LIMIT 1').first();await c.env.DB.prepare('SELECT user_id FROM auth_credentials LIMIT 1').first();database='ready'}catch{database='migration-required'}}
+ if(c.env.DB){try{await ensureSchema(c.env.DB);await c.env.DB.prepare('SELECT id FROM users LIMIT 1').first();await c.env.DB.prepare('SELECT user_id FROM auth_credentials LIMIT 1').first();database='ready'}catch{database='migration-required'}}
  return c.json({status:database==='ready'?'ok':'setup-required',service:'lifevault-api',version:2,database},database==='ready'?200:503);
 });
 app.get('/api/v1',c=>c.json({service:'LifeVault API',version:'v1',status:'authentication'}));
