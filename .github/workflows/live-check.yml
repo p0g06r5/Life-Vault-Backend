@@ -1,0 +1,25 @@
+name: Verify live Cloudflare backend
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Confirm deployed Worker and initialize D1 on first use
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL="https://life-vault-backend.ghimirep175.workers.dev/health"
+          for attempt in $(seq 1 20); do
+            echo "Live health check attempt $attempt"
+            if curl --fail --silent --show-error --max-time 15 "$URL" -o /tmp/lifevault-health.json               && jq -e '.service == "lifevault-api" and .version == 2 and .database == "ready" and .status == "ok"' /tmp/lifevault-health.json; then
+              echo "CONFIRMED: Worker version 2 deployed and D1 account tables initialized."
+              exit 0
+            fi
+            cat /tmp/lifevault-health.json 2>/dev/null || true
+            sleep 8
+          done
+          echo "Could not verify live Worker + D1. Check Cloudflare deployment and DB binding." >&2
+          exit 1
