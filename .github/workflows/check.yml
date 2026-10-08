@@ -35,7 +35,8 @@ jobs:
           EMAIL="ci-$(date +%s)-$$@example.test"
           PASSWORD='TestPassword!2026'
           AVATAR='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p00AAAAASUVORK5CYII='
-          RESPONSE=$(curl -fsS -D /tmp/lv-register-headers -X POST "$API/register" -H "Origin: $ORIGIN" -H 'Content-Type: application/json' -d "{\"name\":\"Test User\",\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\"}")
+          PAYLOAD=$(jq -nc --arg name "Test User" --arg email "$EMAIL" --arg password "$PASSWORD" --arg avatar "$AVATAR" '{name:$name,email:$email,password:$password,avatar:$avatar}')
+          RESPONSE=$(curl -fsS -D /tmp/lv-register-headers -X POST "$API/register" -H "Origin: $ORIGIN" -H 'Content-Type: application/json' -d "$PAYLOAD")
           echo "$RESPONSE" | jq -e '.user.name=="Test User"'
           COOKIE=$(grep -i '^set-cookie:' /tmp/lv-register-headers | head -1 | tr -d '\r' | cut -d ' ' -f2 | cut -d ';' -f1)
           test -n "$COOKIE"
