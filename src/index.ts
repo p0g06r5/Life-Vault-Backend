@@ -1,7 +1,7 @@
 import {Hono} from 'hono';
 import {cors} from 'hono/cors';
 import {secureHeaders} from 'hono/secure-headers';
-import {currentUser,register,login,logout,me,type Bindings} from './auth';
+import {currentUser,register,login,logout,me,updateAvatar,type Bindings} from './auth';
 import {ensureSchema} from './bootstrap';
 import {listDocuments,putDocument} from './documents';
 const app=new Hono<{Bindings:Bindings}>();
@@ -29,6 +29,7 @@ app.post('/api/v1/auth/register',c=>register(c));
 app.post('/api/v1/auth/login',c=>login(c));
 app.post('/api/v1/auth/logout',c=>logout(c));
 app.get('/api/v1/auth/me',c=>me(c));
+app.put('/api/v1/auth/avatar',c=>updateAvatar(c));
 app.get('/api/v1/me',c=>me(c));
 app.get('/api/v1/documents',c=>listDocuments(c));
 app.put('/api/v1/documents/:kind',c=>putDocument(c));
