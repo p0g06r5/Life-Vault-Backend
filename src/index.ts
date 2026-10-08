@@ -6,7 +6,7 @@ const app=new Hono<{Bindings:Bindings}>();
 app.use('*',secureHeaders());
 app.use('/api/v1/*',async(c,next)=>{
  const allowed=[c.env.APP_ORIGIN||'https://life-vault-c3b.pages.dev','http://localhost:5173'];
- return cors({origin:(origin)=>allowed.includes(origin)?origin:null,allowMethods:['GET','POST','PATCH','DELETE','OPTIONS'],allowHeaders:['Content-Type'],credentials:true,maxAge:600})(c,next);
+ return cors({origin:(origin)=>allowed.includes(origin)?origin:undefined,allowMethods:['GET','POST','PATCH','DELETE','OPTIONS'],allowHeaders:['Content-Type'],credentials:true,maxAge:600})(c,next);
 });
 app.use('/api/v1/*',async(c,next)=>{
  if(!['GET','HEAD','OPTIONS'].includes(c.req.method)){
