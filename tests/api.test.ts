@@ -15,7 +15,7 @@ describe('LifeVault backend foundation', () => {
   });
   it('refuses access to collections without authentication', async () => {
     for (const method of ['GET','POST','PATCH','DELETE']) {
-      const response = await app.request('/api/v1/collections', { method }, env);
+      const response = await app.request('/api/v1/collections', { method, headers: { Origin: 'https://life-vault-c3b.pages.dev', 'Content-Type': 'application/json' } }, env);
       expect(response.status).toBe(503);
     }
   });
